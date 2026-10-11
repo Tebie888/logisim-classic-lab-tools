@@ -2,6 +2,43 @@
 
 这份教程面向已经安装 MCP 服务和 `logisim-classic-lab-workflow` Skill 的用户。你通常只要用自然语言告诉 Codex 要画什么；MCP 负责读取元件、创建和检查 `.circ` 工程，Skill 提醒 Codex 按安全、可验证的步骤完成工作。
 
+
+## 从打开软件开始
+
+下面按“Codex 让 AI 画图”的实际顺序来操作。MCP 直接调用本机 Logisim 引擎创建 `.circ` 文件；它不是鼠标自动化，所以**让 AI 创建电路时不必先打开 Logisim 窗口**。完成后再用 GUI 打开文件查看或手工调整。
+
+### 第一次使用：启动并确认环境
+
+1. 从 Windows 开始菜单或桌面快捷方式打开 **Codex**，进入一个任务；选择或打开你准备存放电路文件的项目/工作文件夹。输出目录要存在，并且对当前 Codex 有写入权限。
+2. 按仓库首页的[安装步骤](https://github.com/Tebie888/logisim-classic-lab-tools#install-mcp)配置 MCP 和 Skill。MCP 配置中的 `LOGISIM_HUST_EXE` 要指向你自己安装的兼容 Logisim 程序；仓库不附带该软件。第一次改完配置后重启 Codex，让它加载 MCP 服务和 Skill。
+3. 在对话中发送：
+
+   > 检查 Logisim Classic Lab MCP 是否已连接。请调用 `logisim_env_info` 查询程序版本，并确认你能看到 `build_circuit`、`validate_circuit`、`check_connections`、`export_circuit_image`。先只报告状态，不要创建或修改文件。
+
+4. 确认 Codex 报告了可用的程序路径、版本和工具。如果它说工具不存在，先检查 Codex 的 MCP 配置和服务器日志并重启；如果报告找不到 Java 或 Logisim，检查 `LOGISIM_HUST_EXE` 和 Java 安装。此时不要继续要求它画图。
+
+### 每次画图：从需求到文件
+
+1. 选“新建电路”或“修改现有工程”。新建时给一个**尚不存在的 `.circ` 文件名**；修改时给现有文件路径并明确允许修改的电路。不要让 AI 猜测哪个工程或覆盖哪个文件。
+2. 按下一节的需求模板写输入、输出、逻辑和验收条件。组合逻辑尽可能给真值表；时序电路说明时钟边沿、复位和使能。
+3. 让 Codex 按 Skill 查询真实元件和端口，先用 `dry_run=true` 预览。检查它返回的元件、连接、位宽和位置摘要；出现错误就先修正预览。
+4. 预览正确后，让 Codex 用相同设计正式创建或编辑电路，再做运行时结构检查和预期网络检查。不要让它为了让检查通过而改写功能要求。
+5. 要求 Codex 按你列出的每一个向量实际测试，并把期望值与实际值并列报告。让它导出 PNG、查看图中网络标签和元件显示是否遮挡；需要调整时先改布局，再重做受影响的检查和导图。
+6. 在 Codex 输出中找到 `.circ` 和 `.png` 的路径。打开 Logisim GUI：从 Windows 开始菜单启动兼容的 Logisim 程序，选择 **File → Open**（文件→打开），选择生成的 `.circ`。若文件关联配置正确，也可以在文件管理器中双击 `.circ`。
+7. 在 Logisim 中查看并交互测试：点击输入 Pin 改变 0/1，观察输出；如果手工改了电路，保存后回到 Codex，要求它重新运行受影响的检查和测试。不要同时在 Codex 和 GUI 中改写同一个文件。
+
+```mermaid
+flowchart LR
+    A[打开 Codex 并选择工作目录] --> B[确认 MCP 和 Skill 可用]
+    B --> C[写清输入 输出 功能和测试]
+    C --> D[查询元件端口并 dry-run]
+    D --> E{预览通过？}
+    E -- 否 --> C
+    E -- 是 --> F[创建 .circ 并做运行时检查]
+    F --> G[运行测试向量并导出 PNG]
+    G --> H[在 Logisim GUI 打开并查看]
+```
+
 ## 先确认连接正常
 
 在 Codex 中要求：
@@ -12,7 +49,32 @@
 
 MCP 是实际执行操作的工具接口；Skill 是指导 Codex 如何选元件、读取真实端口、检查电路和审阅图片的工作说明。它们都不会代替你提供功能要求。先说清输入、输出、位宽和期望行为，画出的电路才有明确的验收标准。
 
-## 描述你要画的电路
+## 给 AI 的需求模板
+
+建议直接复制这段并把方括号内容填完整。路径要改成你机器上**已存在的输出文件夹**；文件名本身应是新的。如果资料不全，要求 Codex 先提问，不要凭猜测补功能。
+
+```text
+请使用 logisim-classic-lab-workflow Skill 和 Logisim Classic Lab MCP 完成下面的电路。
+
+【工程模式】新建 / 修改现有工程（二选一）
+【目标文件】C:/circuits/my-circuit.circ
+【要创建或修改的电路】[电路名；修改时说明允许改哪些部分]
+【输入】[名称、方向、位宽、有效电平，例如 A: 1 位输入]
+【输出】[名称、位宽]
+【功能】[逻辑表达式、状态变化说明或真值表]
+【时钟/复位/使能】[无；或分别说明边沿、电平和行为]
+【布局】输入在左、输出在右；[其他位置/分区/标签要求]
+【验收测试】[每组输入/时钟刺激] -> [预期输出]
+【输出文件】保存 .circ；另导出 [PNG 路径] 的预览图
+【安全要求】先读取工程/元件端口并 dry-run；不要覆盖已有文件；不要擅自改变接口。
+【完成报告】列出检查、每组测试的期望值和实测值，以及 .circ 和 PNG 路径。
+```
+
+对新建电路，常用的最短请求是：
+
+> 新建一个半加器，保存到 `C:/circuits/half-adder.circ`。输入 A、B；输出 SUM=A XOR B、CARRY=A AND B。先确认环境并查询 XOR/AND 元件的真实端口，使用 readable 布局，dry-run 通过后再创建。用 00、01、10、11 四组输入验证，导出 PNG 并报告期望/实际值和文件路径。不要覆盖已有文件。
+
+### 描述你要画的电路
 
 新建电路时，可以复制下面的格式并替换内容：
 
@@ -45,7 +107,7 @@ MCP 是实际执行操作的工具接口；Skill 是指导 Codex 如何选元件
 
 ## 看懂半加器示例
 
-仓库提供已经构建并测试过的示例：[`half-adder.circ`](../../examples/half-adder.circ)。下图是将 A=1、B=1 后导出的状态图；此时 SUM=0、CARRY=1。
+仓库提供已经构建并测试过的示例：[`half-adder.circ`](https://github.com/Tebie888/logisim-classic-lab-tools/blob/main/examples/half-adder.circ)。下图是将 A=1、B=1 后导出的状态图；此时 SUM=0、CARRY=1。
 
 ![半加器电路预览：A=1、B=1、SUM=0、CARRY=1](assets/half-adder-preview.png)
 
