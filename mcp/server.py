@@ -28,7 +28,7 @@ ET 重序列化会丢掉排版、改变属性顺序，虽然 Logisim 多半还�
 
 环境变量
 --------
-LOGISIM_HUST_EXE        Logisim-HUST exe 完整路径（默认按课程包路径自动探测）
+LOGISIM_HUST_EXE        兼容 Logisim exe 完整路径（默认不自动搜索）
 LOGISIM_MCP_JAVA        java.exe 完整路径（默认 JAVA_HOME → PATH → 注册表）
 LOGISIM_MCP_WORKSPACE   安全围栏：只允许操作该目录下的文件（可选）
 LOGISIM_MCP_MAX_TIMEOUT 仿真超时上限秒数（默认 300）
@@ -65,7 +65,7 @@ from xml.sax.saxutils import escape
 # --------------------------------------------------------------------------
 
 SERVER_NAME = "logisim-classic-lab-mcp"
-SERVER_VERSION = "1.3.1"
+SERVER_VERSION = "1.3.2"
 PROTOCOL_VERSION = "2024-11-05"
 SUPPORTED_PROTOCOLS = {"2024-11-05", "2025-03-26", "2025-06-18"}
 
@@ -86,9 +86,9 @@ RE_XML_TOKEN = re.compile(
 INSTRUCTIONS = (
     "面向经典 Logisim 2.7（Logisim-HUST / 计组虚拟实验）的 .circ 工具集。"
     "读电路用 describe_circuit / list_pins，验证作业用 validate_circuit，"
-    "无界面跑仿真用 simulate_tty / get_truth_table。"
+    "无界面仿真用 simulate_tty / get_simulation_table；两者只接受 file 并运行文件的 main 电路，不接受 circuit 选择参数。"
     "编辑前请先 validate_circuit；编辑工具校验候选文件后自动备份并原子提交。"
-    "get_simulation_table 解析输出变化记录；get_truth_table 是兼容别名，不自动枚举输入。"
+    "没有 halt 引脚时 -tty 可能运行到超时；get_simulation_table 和兼容别名 get_truth_table 都不自动枚举输入。"
     "完整搭建用 build_project/build_circuit，支持元件、子电路、批量网络和 dry_run；"
     "先 list_component_catalog 获取真实名称和属性，get_component_ports 获取端口编号、坐标与说明。"
     "注意：本工具只处理经典 2.3/2.6/2.7 schema，不能处理 Logisim-evolution 4.x 的 .circ。"
@@ -1375,7 +1375,7 @@ CIRCUIT_PROP = {"type": "string", "minLength": 1, "description": "电路名；�
 TOOLS: list[dict] = [
     {
         "name": "logisim_env_info",
-        "description": "报告本机 Logisim-HUST 运行环境：exe 路径是否存在、java 路径、Python 版本、安全围栏。"
+        "description": "报告本机兼容经典 Logisim 运行环境：exe 路径是否存在、java 路径、Python 版本和安全围栏。"
                        "probe_version=true 时会真正调用 -version 探测（约 1-3 秒）。",
         "inputSchema": {
             "type": "object",
@@ -1470,7 +1470,7 @@ TOOLS: list[dict] = [
     },
     {
         "name": "simulate_tty",
-        "description": "无界面仿真，等价于 `java -jar <logisim-hust> -tty <format> <circ>`。"
+        "description": "无界面仿真，只运行文件中的 <main>，不接受 circuit 选择参数；等价于 `java -jar <logisim-hust> -tty <format> <circ>`。"
                        "强制超时（没有 halt 引脚时仿真永不退出）。返回 verdict："
                        "halted by halt pin / halted by oscillation / timeout / output limit / error / exited。",
         "inputSchema": {
@@ -1581,7 +1581,7 @@ TOOLS: list[dict] = [
 
 _table_tool = next(t for t in TOOLS if t["name"] == "get_truth_table")
 TOOLS.append({"name": "get_simulation_table",
-              "description": "运行 -tty table,halt，解析输出变化记录为 header/rows，保留停机同一行的数值。"
+              "description": "只运行文件中的 <main>，不接受 circuit 选择参数。运行 -tty table,halt，解析输出变化记录为 header/rows，保留停机同一行的数值。"
                              "不会枚举输入；complete 只表示本次输出采集和解析完成，不表示真值表覆盖或功能正确。",
               "inputSchema": _table_tool["inputSchema"]})
 

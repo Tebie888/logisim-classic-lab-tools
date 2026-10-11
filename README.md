@@ -52,13 +52,19 @@ A local MCP server and Codex skill for inspecting, validating, editing, simulati
 
 The server can inspect project XML without Java, but simulation and image export require a compatible runtime. Set `LOGISIM_MCP_WORKSPACE` to restrict file operations to a workspace. `LOGISIM_MCP_MAX_TIMEOUT` controls the simulation timeout cap.
 
+### DeepSeek Harness
+
+DeepSeek Harness uses its `@deepseek-ai/dsh-mcp-client` adapter; the generic `mcpServers` JSON above is for clients that support that format and does not configure Harness. Follow the [DeepSeek Harness setup guide](docs/deepseek-harness.md). A sanitized [session test note](docs/harness-session-test.md) records a real integration check and its result. In Harness, MCP tools appear with names such as `mcp__logisim-classic-lab__logisim_env_info` after the server entry is active and the session reconnects.
+
+If `logisim_env_info` reports `exe_exists=false`, set `LOGISIM_HUST_EXE` to the full path of your compatible Logisim executable. The server does not search the whole computer by default. You can instead set `LOGISIM_SEARCH_ROOT` to a directory to search recursively for `logisim-hust-*.exe`, or pass an explicit `exe` path to the environment tool.
+
 ## Install the skill
 
-Copy `skills/logisim-classic-lab-workflow/` to your Codex skills directory, preserving the directory name. Restart or refresh the Codex session so it discovers the skill. The scripts in that folder are optional; the MCP is preferred when connected. Windows Word automation and PDF page rendering are optional report-checking features and require Microsoft Word plus the Python package `pypdfium2`.
+Copy `skills/logisim-classic-lab-workflow/` to a skill directory your agent discovers. For DeepSeek Harness, `.agents/skills/logisim-classic-lab-workflow/` is a supported project location; Codex can use its configured skills directory. Preserve the folder name and `SKILL.md`, then restart or refresh the session so it discovers the skill. The scripts in that folder are optional; the MCP is preferred when connected. Windows Word automation and PDF page rendering are optional report-checking features and require Microsoft Word plus the Python package `pypdfium2`.
 
 ## 中文使用教程
 
-从 Codex 描述需求到建图、连线检查、输入验证和导出 PNG 的完整流程见 [在 Codex 中用 Logisim Classic Lab 画电路](skills/logisim-classic-lab-workflow/tutorial.md)。仓库附有可直接打开的半加器 `.circ` 示例和状态预览图。
+从 Codex 描述需求到建图、连线检查、输入验证和导出 PNG 的流程见[使用教程](skills/logisim-classic-lab-workflow/tutorial.md)；DeepSeek Harness 的配置步骤见[Harness 接入指南](docs/deepseek-harness.md)。仓库附有可直接打开的半加器 `.circ` 示例和状态预览图。
 
 ## Tests and examples
 

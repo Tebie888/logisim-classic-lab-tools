@@ -1,11 +1,11 @@
 {
-  "release": "1.3.1",
+  "release": "1.3.2",
   "validated_on": "2026-10-11",
   "checks": {
     "python_unittest": {
       "status": "passed",
       "tests": 47,
-      "duration_seconds": 88.534,
+      "duration_seconds": 88.199,
       "command": "python -m unittest discover -s mcp -p test*.py -v"
     },
     "bridge_compile": {
@@ -19,11 +19,14 @@
     "stdio_protocol": {
       "status": "passed",
       "server_name": "logisim-classic-lab-mcp",
-      "tools": 28
+      "server_version": "1.3.2",
+      "tools": 28,
+      "check": "initialize and tools/list"
     },
     "skill_frontmatter": {
       "status": "passed",
-      "name": "logisim-classic-lab-workflow"
+      "name": "logisim-classic-lab-workflow",
+      "checks": "YAML frontmatter fields, no installation-path placeholders, tool argument guidance"
     },
     "privacy_scan": {
       "status": "passed",
@@ -32,6 +35,29 @@
     "tutorial_example": {
       "status": "passed",
       "description": "Built the half-adder example, passed runtime and connectivity checks, tested all four input combinations, and exported the PNG preview."
+    },
+    "deepseek_harness_session": {
+      "status": "partial_integration",
+      "session_date": "2026-10-11",
+      "skill_discovered": true,
+      "logisim_mcp_tools_visible": 0,
+      "client_package_present": true,
+      "profile_server_entry_present": false,
+      "direct_stdio_server_version": "1.3.1",
+      "direct_stdio_tools": 28,
+      "half_adder_vectors_passed": 4,
+      "raw_session_in_repository": false,
+      "details": "See docs/harness-session-test.md; direct stdio checks did not prove Harness session integration."
+    },
+    "docs_smoke": {
+      "status": "passed",
+      "files": [
+        "README.md",
+        "docs/deepseek-harness.md",
+        "docs/harness-session-test.md",
+        "mcp/README.md",
+        "skills/logisim-classic-lab-workflow/SKILL.md"
+      ]
     }
   },
   "runtime_compatibility": {

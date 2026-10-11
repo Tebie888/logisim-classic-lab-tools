@@ -1,12 +1,17 @@
-# 完整工程搭建（MCP 1.3.1）
+# 完整工程搭建（MCP 1.3.2）
 
-配套服务 <MCP_INSTALL_DIR>\server.py 有 28 个工具；完整搭建用 Python 标准库与当前 Java/Logisim 运行时，无需 pip 或运行时 javac。builder.py、layout.py、connections.py、image_export.py 和 PortProbe/CircuitImage 的全部 class 文件必须与服务一起保留。旧 MCP 进程需重连后才出现新工具。
+配套 MCP 仓库的 mcp/server.py 有 28 个工具；完整搭建用 Python 标准库与当前 Java/Logisim 运行时，无需 pip 或运行时 javac。builder.py、layout.py、connections.py、image_export.py 和 PortProbe/CircuitImage 的全部 class 文件必须与服务一起保留。旧 MCP 进程需重连后才出现新工具。
 
-重连暂不可用时，可在新 Python 进程使用同一服务入口；参数和写入保护与 MCP 相同，不绕过校验：
+需要在 MCP 外独立调用同一 Python 入口时，先把 LOGISIM_CLASSIC_LAB_MCP_DIR 设为包含 server.py 的 MCP 仓库目录；参数和写入保护与 MCP 相同，不绕过校验：
 
 ~~~python
-import json, sys
-sys.path.insert(0, '<MCP_INSTALL_DIR>')
+import json, os, sys
+from pathlib import Path
+
+mcp_root = Path(os.environ['LOGISIM_CLASSIC_LAB_MCP_DIR'])
+if not (mcp_root / 'server.py').is_file():
+    raise FileNotFoundError(f'找不到 MCP 服务入口: {mcp_root / "server.py"}')
+sys.path.insert(0, str(mcp_root))
 import server
 result = server.call_tool('check_connections', {'file': 'C:/path/demo.circ', 'all': True})
 payload = json.loads(result['content'][0]['text'])
@@ -62,10 +67,10 @@ export_circuit_image 参数 file/output 必填，circuit 默认为主电路；ou
 
 ## 可运行例子
 
-- <MCP_INSTALL_DIR>\examples\full-adder.circ：主电路调用 FA 子电路的一位全加器，GUI 可点击 A/B/Cin。
-- <MCP_INSTALL_DIR>\examples\counter-stop.circ：两位计数器按时钟输出 0、1、2、3 后 halt。
+- MCP 仓库 examples/full-adder.circ：主电路调用 FA 子电路的一位全加器，GUI 可点击 A/B/Cin。
+- MCP 仓库 examples/counter-stop.circ：两位计数器按时钟输出 0、1、2、3 后 halt。
 - 同目录 .json 是 build_project 的可复用参数，verification.json 是真实构建/仿真证据。把 JSON file 改为已存在目录内的新绝对路径。
-- python <MCP_INSTALL_DIR>\build_examples.py NEW_DIRECTORY 可重新生成两例，已有例子拒绝覆盖。
+- 在 MCP 仓库目录运行 python build_examples.py NEW_DIRECTORY 可重新生成两例，已有例子拒绝覆盖。
 
 完整回归：在服务目录运行 python -m unittest -v test_server test_improvements。真实集成测试覆盖全加器八组输入、时钟/计数器/寄存器/选择器、全部内建类型加载、ROM 内容、层级、密集端口、同位宽短接、仿真图导出及失败不写入。
 

@@ -5,19 +5,19 @@ description: Inspect, edit, and simulate classic Logisim .circ projects, includi
 
 # Logisim Classic Lab Workflow
 
-支持经典 Logisim 课程电路及 HUST fork。先读取文件的 source、主电路和库映射；不要把 Evolution 工程当作经典工程修改。MCP 1.3.1 支持课程包中出现的 2.3.x、2.6.x、2.7.x 和 HUST 2.15.x，工程格式为 version="1.0"；其他来源只做读取诊断。
+面向经典 Logisim 电路及课程版分支。先读取文件的 source、主电路和库映射；不要把 Evolution 工程当作经典工程修改。MCP 1.3.2 支持经典 2.3.x、2.6.x、2.7.x 工程，并实测 Logisim-HUST 2.15.0.2；工程格式为 version="1.0"。其他来源只做读取诊断。
 
 ## 工具选择
 
-面向用户的安装、提示词和完整画图示例见 [Codex 使用教程](tutorial.md)。
+面向用户的提示词和完整画图示例见[使用教程](tutorial.md)；DeepSeek Harness 的接线方法见[Harness 接入指南](../../docs/deepseek-harness.md)。
 
-配套 MCP：<MCP_INSTALL_DIR>\server.py，提供 28 个工具。优先用可用的 MCP；缺失时可使用本技能脚本。旧服务进程需重连才能加载升级后的工具和参数。
+配套 MCP 服务仓库提供 28 个工具。优先用已连接的 MCP；缺失时可使用本技能脚本。旧服务进程需重连才能加载升级后的工具和参数。
 
 - 环境：logisim_env_info(probe_version=true) 动态确认 exe、Java 和版本，不依赖历史机器记录。
 - 读取：describe_circuit、list_pins、list_library_index；需要原始片段时用 get_circuit_xml。
 - 校验：validate_circuit 的 ok 表示没有 error；warning 单独列出。默认仅结构检查；接线或布局改动前后用 runtime=true，加载真实端口检查多驱动和位宽冲突。check_connections(expected_nets=...) 还能检查同位宽网络意外合并、断开和多接端口；不提供设计网络时无法证明接线符合意图。
-- 仿真：simulate_tty(format="table,halt,stats", timeout_sec=30, include_output=true)。
-- 表格：get_simulation_table 解析输出变化记录；get_truth_table 是兼容别名，**两者均不自动枚举输入**。complete 只表示本次采集和解析完成，输入覆盖率和功能正确性须另验证。
+- 仿真：simulate_tty(file=..., format="table,halt,stats", timeout_sec=30, include_output=true) 只运行该文件的 main 电路；不接受 circuit 选择参数。优先给绝对 file 路径。verdict 为 timeout 表示未在限时内结束，不是通过；返回字段还包括 timed_out、exit_code 和 process_ok。
+- 表格：get_simulation_table(file=...) 解析输出变化记录；get_truth_table 是兼容别名。两者只接受 file，并运行该文件的 main 电路；优先使用绝对路径，不接受 circuit 参数，也不自动枚举输入。要单独测试其他电路，应准备以该电路为 main 的测试文件。complete 只表示本次采集和解析完成，输入覆盖率和功能正确性须另验证。
 - 编辑：add_wire、add_pin、set_pin_label、remove_component、remove_wire 支持 dry_run=true，预览也进行候选校验。
 - 完整搭建：build_project 一次创建多电路工程或向旧工程追加；build_circuit 是单电路入口。create_project、add_circuit、add_component 提供分步搭建。先 list_component_catalog 查真实名称和属性，用 get_component_ports 查 index、坐标、位宽及 tooltip，再按 nets 批量接线；已有元件用 connect_ports。
 - 批量建图：components 用唯一 id 标识，nets 端点用 id+port 或 name+loc+port。默认 layout="readable" 用短导线、密集端口扇出及可读网络标签；label_spacing、tunnel_offset 调整间距，layout="compact" 保留端口直放隧道。两端网络可用 waypoints 画正交线；所有分支应列在同一个 net。dry_run 返回候选 XML 和实际端口，未知属性/位宽冲突/递归子电路/意外短接拒绝提交。保存 connection_manifest 作为后续 check_connections 的 expected_nets。详见 [完整搭建参考](full-circuit-building.md)。
@@ -46,10 +46,16 @@ MCP 会检查候选 XML、精确修改结果和新增结构错误，再保存原
 
 ## 脚本后备方案
 
-脚本路径相对**技能根目录**，不相对当前项目目录。当前维护源是 <SKILL_INSTALL_DIR>\；.agents\skills\logisim-classic-lab-workflow\ 是同步副本，修改维护源后同步对应文件。
+脚本路径相对**技能根目录**，不相对当前项目目录。下面会依次查找 Harness 的 .agents/skills、Codex 的 .codex/skills 和当前仓库的 Skill 副本；若使用其他安装位置，请把对应目录加入候选路径。
 
 ~~~powershell
-$skillRoot = '<SKILL_INSTALL_DIR>'
+$skillCandidates = @(
+  (Join-Path $env:USERPROFILE '.agents\skills\logisim-classic-lab-workflow'),
+  (Join-Path $env:USERPROFILE '.codex\skills\logisim-classic-lab-workflow'),
+  (Join-Path (Get-Location) 'skills\logisim-classic-lab-workflow')
+)
+$skillRoot = $skillCandidates | Where-Object { Test-Path (Join-Path $_ 'SKILL.md') } | Select-Object -First 1
+if (-not $skillRoot) { throw '找不到 Skill 目录；请把安装目录加入 $skillCandidates。' }
 python "$skillRoot\scripts\inspect-circ.py" 'D:\path\lab.circ' --all
 & "$skillRoot\scripts\tty-sim.ps1" -Circuit 'D:\path\lab.circ' -Format 'table,halt,stats' -TimeoutSec 30
 & "$skillRoot\scripts\launch-logisim.cmd" 'D:\path\lab.circ'
