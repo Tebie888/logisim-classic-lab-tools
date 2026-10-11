@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project source="2.15.0.2" version="1.0">
+This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
+  <lib name="0" desc="#Wiring"/>
+  <lib name="1" desc="#Gates"/>
+  <lib name="2" desc="#Plexers"/>
+  <lib name="3" desc="#Arithmetic"/>
+  <lib name="4" desc="#Memory"/>
+  <lib name="5" desc="#I/O"/>
+  <lib name="6" desc="#Base"/>
+  <lib name="7" desc="#TTL"/>
+  <main name="main"/>
+  <circuit name="main">
+    <comp lib="0" loc="(100,100)" name="Pin">
+      <a name="facing" val="east"/>
+      <a name="output" val="false"/>
+      <a name="width" val="1"/>
+      <a name="tristate" val="false"/>
+      <a name="pull" val="none"/>
+      <a name="label" val="A"/>
+      <a name="labelloc" val="north"/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="0" loc="(100,200)" name="Pin">
+      <a name="facing" val="east"/>
+      <a name="output" val="false"/>
+      <a name="width" val="1"/>
+      <a name="tristate" val="false"/>
+      <a name="pull" val="none"/>
+      <a name="label" val="B"/>
+      <a name="labelloc" val="north"/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="1" loc="(320,100)" name="XOR Gate">
+      <a name="facing" val="east"/>
+      <a name="width" val="1"/>
+      <a name="size" val="30"/>
+      <a name="inputs" val="2"/>
+      <a name="out" val="01"/>
+      <a name="label" val=""/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+      <a name="xor" val="odd"/>
+    </comp>
+    <comp lib="1" loc="(320,240)" name="AND Gate">
+      <a name="facing" val="east"/>
+      <a name="width" val="1"/>
+      <a name="size" val="30"/>
+      <a name="inputs" val="2"/>
+      <a name="out" val="01"/>
+      <a name="label" val=""/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="0" loc="(560,100)" name="Pin">
+      <a name="facing" val="west"/>
+      <a name="output" val="true"/>
+      <a name="width" val="1"/>
+      <a name="tristate" val="true"/>
+      <a name="pull" val="none"/>
+      <a name="label" val="SUM"/>
+      <a name="labelloc" val="north"/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="0" loc="(560,240)" name="Pin">
+      <a name="facing" val="west"/>
+      <a name="output" val="true"/>
+      <a name="width" val="1"/>
+      <a name="tristate" val="true"/>
+      <a name="pull" val="none"/>
+      <a name="label" val="CARRY"/>
+      <a name="labelloc" val="north"/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="0" loc="(160,100)" name="Tunnel">
+      <a name="label" val="A"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(220,80)" name="Tunnel">
+      <a name="label" val="A"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(230,220)" name="Tunnel">
+      <a name="label" val="A"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(160,200)" name="Tunnel">
+      <a name="label" val="B"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(220,120)" name="Tunnel">
+      <a name="label" val="B"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(230,260)" name="Tunnel">
+      <a name="label" val="B"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(380,100)" name="Tunnel">
+      <a name="label" val="SUM"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(500,100)" name="Tunnel">
+      <a name="label" val="SUM"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(380,240)" name="Tunnel">
+      <a name="label" val="CARRY"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(500,240)" name="Tunnel">
+      <a name="label" val="CARRY"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <wire from="(100,100)" to="(160,100)"/>
+    <wire from="(280,90)" to="(270,90)"/>
+    <wire from="(270,90)" to="(270,80)"/>
+    <wire from="(270,80)" to="(220,80)"/>
+    <wire from="(290,230)" to="(280,230)"/>
+    <wire from="(280,230)" to="(280,220)"/>
+    <wire from="(280,220)" to="(230,220)"/>
+    <wire from="(100,200)" to="(160,200)"/>
+    <wire from="(280,110)" to="(270,110)"/>
+    <wire from="(270,110)" to="(270,120)"/>
+    <wire from="(270,120)" to="(220,120)"/>
+    <wire from="(290,250)" to="(280,250)"/>
+    <wire from="(280,250)" to="(280,260)"/>
+    <wire from="(280,260)" to="(230,260)"/>
+    <wire from="(320,100)" to="(380,100)"/>
+    <wire from="(560,100)" to="(500,100)"/>
+    <wire from="(320,240)" to="(380,240)"/>
+    <wire from="(560,240)" to="(500,240)"/>
+</circuit>
+</project>

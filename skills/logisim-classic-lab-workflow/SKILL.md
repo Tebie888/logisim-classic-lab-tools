@@ -9,6 +9,8 @@ description: Inspect, edit, and simulate classic Logisim .circ projects, includi
 
 ## 工具选择
 
+面向用户的安装、提示词和完整画图示例见 [Codex 使用教程](tutorial.md)。
+
 配套 MCP：<MCP_INSTALL_DIR>\server.py，提供 28 个工具。优先用可用的 MCP；缺失时可使用本技能脚本。旧服务进程需重连才能加载升级后的工具和参数。
 
 - 环境：logisim_env_info(probe_version=true) 动态确认 exe、Java 和版本，不依赖历史机器记录。

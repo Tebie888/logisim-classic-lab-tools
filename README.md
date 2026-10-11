@@ -56,6 +56,10 @@ The server can inspect project XML without Java, but simulation and image export
 
 Copy `skills/logisim-classic-lab-workflow/` to your Codex skills directory, preserving the directory name. Restart or refresh the Codex session so it discovers the skill. The scripts in that folder are optional; the MCP is preferred when connected. Windows Word automation and PDF page rendering are optional report-checking features and require Microsoft Word plus the Python package `pypdfium2`.
 
+## 中文使用教程
+
+从 Codex 描述需求到建图、连线检查、输入验证和导出 PNG 的完整流程见 [在 Codex 中用 Logisim Classic Lab 画电路](skills/logisim-classic-lab-workflow/tutorial.md)。仓库附有可直接打开的半加器 `.circ` 示例和状态预览图。
+
 ## Tests and examples
 
 ```powershell
@@ -63,7 +67,7 @@ python -m unittest discover -s mcp -p "test*.py" -v
 python mcp/build_examples.py <EMPTY_OUTPUT_DIRECTORY>
 ```
 
-Bridge compilation is separate from unit tests. The two example circuits are small synthetic smoke tests; the validation summary records the checks run for this release.
+Bridge compilation is separate from unit tests. The example circuits are small synthetic smoke tests; the validation summary records the checks run for this release.
 
 ## Compatibility and limitations
 

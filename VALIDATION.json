@@ -28,6 +28,10 @@
     "privacy_scan": {
       "status": "passed",
       "details": "No personal names, private email addresses, student identifiers, home-directory paths, credentials, homework, reports, screenshots, or generated bridge classes included."
+    },
+    "tutorial_example": {
+      "status": "passed",
+      "description": "Built the half-adder example, passed runtime and connectivity checks, tested all four input combinations, and exported the PNG preview."
     }
   },
   "runtime_compatibility": {
