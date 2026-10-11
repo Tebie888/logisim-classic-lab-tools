@@ -1,0 +1,47 @@
+{
+  "release": "1.3.1",
+  "validated_on": "2026-10-11",
+  "checks": {
+    "python_unittest": {
+      "status": "passed",
+      "tests": 47,
+      "duration_seconds": 88.534,
+      "command": "python -m unittest discover -s mcp -p test*.py -v"
+    },
+    "bridge_compile": {
+      "status": "passed",
+      "target_bytecode": "Java 8",
+      "sources": [
+        "PortProbe.java",
+        "CircuitImage.java"
+      ]
+    },
+    "stdio_protocol": {
+      "status": "passed",
+      "server_name": "logisim-classic-lab-mcp",
+      "tools": 28
+    },
+    "skill_frontmatter": {
+      "status": "passed",
+      "name": "logisim-classic-lab-workflow"
+    },
+    "privacy_scan": {
+      "status": "passed",
+      "details": "No personal names, private email addresses, student identifiers, home-directory paths, credentials, homework, reports, screenshots, or generated bridge classes included."
+    }
+  },
+  "runtime_compatibility": {
+    "classic_source_versions": [
+      "2.3.x",
+      "2.6.x",
+      "2.7.x"
+    ],
+    "course_fork_tested": "Logisim-HUST 2.15.0.2"
+  },
+  "excluded_artifacts": [
+    "Logisim executables and JARs",
+    "compiled .class files",
+    "personal project data",
+    "machine-specific verification outputs"
+  ]
+}

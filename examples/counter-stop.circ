@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project source="2.15.0.2" version="1.0">
+This file is intended to be loaded by Logisim (http://www.cburch.com/logisim/).
+  <lib name="0" desc="#Wiring"/>
+  <lib name="1" desc="#Gates"/>
+  <lib name="2" desc="#Plexers"/>
+  <lib name="3" desc="#Arithmetic"/>
+  <lib name="4" desc="#Memory"/>
+  <lib name="5" desc="#I/O"/>
+  <lib name="6" desc="#Base"/>
+  <lib name="7" desc="#TTL"/>
+  <main name="main"/>
+  <circuit name="main">
+    <comp lib="4" loc="(400,160)" name="Counter">
+      <a name="width" val="2"/>
+      <a name="max" val="0x3"/>
+      <a name="ongoal" val="wrap"/>
+      <a name="trigger" val="rising"/>
+      <a name="behavior" val="new"/>
+      <a name="label" val=""/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="0" loc="(100,100)" name="Clock">
+      <a name="facing" val="east"/>
+      <a name="highDuration" val="1"/>
+      <a name="lowDuration" val="1"/>
+      <a name="label" val=""/>
+      <a name="labelloc" val="west"/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="0" loc="(100,240)" name="Ground">
+      <a name="facing" val="south"/>
+      <a name="width" val="1"/>
+    </comp>
+    <comp lib="0" loc="(100,320)" name="Power">
+      <a name="facing" val="north"/>
+      <a name="width" val="1"/>
+    </comp>
+    <comp lib="0" loc="(100,400)" name="Constant">
+      <a name="facing" val="east"/>
+      <a name="width" val="2"/>
+      <a name="value" val="0x0"/>
+    </comp>
+    <comp lib="0" loc="(700,160)" name="Pin">
+      <a name="facing" val="west"/>
+      <a name="output" val="true"/>
+      <a name="width" val="2"/>
+      <a name="tristate" val="true"/>
+      <a name="pull" val="none"/>
+      <a name="label" val="count"/>
+      <a name="labelloc" val="north"/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="0" loc="(700,260)" name="Pin">
+      <a name="facing" val="west"/>
+      <a name="output" val="true"/>
+      <a name="width" val="1"/>
+      <a name="tristate" val="true"/>
+      <a name="pull" val="none"/>
+      <a name="label" val="halt"/>
+      <a name="labelloc" val="north"/>
+      <a name="labelfont" val="Dialog plain 12"/>
+      <a name="labelcolor" val="#000000"/>
+    </comp>
+    <comp lib="0" loc="(100,100)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_0"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(380,180)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_0"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(100,400)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_1"/>
+      <a name="width" val="2"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(370,160)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_1"/>
+      <a name="width" val="2"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(100,240)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_2"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(390,180)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_2"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(370,150)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_2"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(370,170)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_2"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(390,140)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_2"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(100,320)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_3"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(380,140)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_3"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(400,160)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_4"/>
+      <a name="width" val="2"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(700,160)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_4"/>
+      <a name="width" val="2"/>
+      <a name="facing" val="east"/>
+    </comp>
+    <comp lib="0" loc="(400,170)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_5"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="west"/>
+    </comp>
+    <comp lib="0" loc="(700,260)" name="Tunnel">
+      <a name="label" val="__mcp_a7eed291cff4_5"/>
+      <a name="width" val="1"/>
+      <a name="facing" val="east"/>
+    </comp>
+</circuit>
+</project>
