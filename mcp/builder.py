@@ -9,6 +9,9 @@ import layout
 
 
 def probe(s, mode, a, text=None, parent=None):
+    if mode == "inspect":
+        source = Path(parent) / ".candidate.circ" if text is not None else s.resolve_circ(a["file"])
+        s.check_runtime_libraries(source, text.encode("utf-8") if text is not None else None)
     helper = Path(__file__).with_name("PortProbe.class")
     if not helper.is_file():
         raise s.ToolError("缺少 PortProbe.class；请按 README 编译附带的 Java 8 源码")
@@ -169,7 +172,8 @@ def check_connectivity(s, data, runtime, nets):
             if group in claimed:
                 raise s.ToolError(f"网络 {net['net']} 与 {claimed[group]} 意外短接")
             claimed[group] = net["net"]
-            extras = [p for p in real_ports if root(p[0]) == group and p[0] not in endpoints]
+            identities = {(p['component'], s.norm_xy(p['component_loc']), p['index']) for p in net['ports']}
+            extras = [p for p in real_ports if root(p[0]) == group and (p[1], p[2], p[3]) not in identities]
             if extras:
                 raise s.ToolError(f"网络 {net['net']} 意外连接其他端口 {extras[:5]}；请调整路径或将已有分支全部纳入 net")
 
@@ -349,6 +353,12 @@ def build(s, a):
               "ports": [{"name": c["name"], "components": [x for x in c["components"] if x["name"] != "Tunnel"]} for c in final["circuits"]]}
     if not a.get("include_details", True):
         result.pop("ports", None); result.pop("candidate_xml", None)
+        # The manifest already contains endpoint identities. Avoid returning
+        # the same geometry, widths and tooltips again for every routed net.
+        result["nets"] = [{**{k: v for k, v in n.items() if k != "ports"}, "port_count": len(n["ports"])} for n in routed]
+    result["net_count"] = len(routed)
+    if not a.get("include_manifest", True):
+        result.pop("connection_manifest", None)
     return result
 
 
@@ -389,7 +399,8 @@ def install(s):
               "layout": {"type": "string", "enum": ["readable", "compact"], "description": "readable 默认：短导线、密集端口扇出、隧道标签间距；compact 将隧道放在端口。都检查实际网络。"},
               "tunnel_offset": {"type": "integer", "minimum": 40, "maximum": 500},
               "label_spacing": {"type": "integer", "minimum": 20, "maximum": 200},
-              "include_details": {"type": "boolean", "description": "默认 true；false 省略候选 XML 和完整端口，保留网络清单与布局摘要。"}}
+              "include_details": {"type": "boolean", "description": "默认 true；false 省略候选 XML、完整端口及重复网络几何，保留网络身份、端点数、清单与布局摘要。"},
+              "include_manifest": {"type": "boolean", "description": "默认 true；已有预期网络清单时可设 false，省略 connection_manifest。"}}
     def add(name, desc, props, required, impl, write=True):
         s.TOOLS.append({"name": name, "description": desc, "inputSchema": {"type": "object", "properties": props,
                         "required": required, "additionalProperties": False},

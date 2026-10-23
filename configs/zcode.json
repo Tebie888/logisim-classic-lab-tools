@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "servers": {
+      "logisim-classic-lab": {
+        "command": "<PYTHON_EXECUTABLE>",
+        "args": ["<REPOSITORY>/mcp/server.py"],
+        "env": {
+          "LOGISIM_HUST_EXE": "<LOGISIM_EXECUTABLE_OR_JAR>",
+          "LOGISIM_MCP_WORKSPACE": "<CIRCUIT_WORKSPACE>"
+        }
+      }
+    }
+  }
+}

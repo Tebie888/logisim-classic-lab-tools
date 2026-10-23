@@ -1,6 +1,6 @@
-# 在 Codex 中用 Logisim Classic Lab 画电路
+# 用 AI Agent 和 Logisim Classic Lab 画电路
 
-这份教程面向已经安装 MCP 服务和 `logisim-classic-lab-workflow` Skill 的用户。你通常只要用自然语言告诉 Codex 要画什么；MCP 负责读取元件、创建和检查 `.circ` 工程，Skill 提醒 Codex 按安全、可验证的步骤完成工作。
+这份教程面向已经安装 MCP 服务和 `logisim-classic-lab-workflow` Skill 的用户，以 Codex 的界面为例。其他兼容 Agent 采用相同工具流程，只需使用各自的安装位置和工具名前缀。MCP 负责读取元件、创建和检查 `.circ` 工程，Skill 指导安全、可验证的步骤。
 
 
 ## 从打开软件开始
@@ -10,10 +10,10 @@
 ### 第一次使用：启动并确认环境
 
 1. 从 Windows 开始菜单或桌面快捷方式打开 **Codex**，进入一个任务；选择或打开你准备存放电路文件的项目/工作文件夹。输出目录要存在，并且对当前 Codex 有写入权限。
-2. 按仓库首页的[安装步骤](https://github.com/Tebie888/logisim-classic-lab-tools#install-mcp)配置 MCP 和 Skill。MCP 配置中的 `LOGISIM_HUST_EXE` 要指向你自己安装的兼容 Logisim 程序；仓库不附带该软件。第一次改完配置后重启 Codex，让它加载 MCP 服务和 Skill。
+2. 按仓库首页的[安装步骤](https://github.com/Tebie888/logisim-classic-lab-tools/blob/main/docs/installation.md)配置 MCP 和 Skill。MCP 配置中的 `LOGISIM_HUST_EXE` 要指向你自己安装的兼容 Logisim 程序；仓库不附带该软件。第一次改完配置后重启 Codex，让它加载 MCP 服务和 Skill。
 3. 在对话中发送：
 
-   > 检查 Logisim Classic Lab MCP 是否已连接。请调用 `logisim_env_info` 查询程序版本，并确认你能看到 `build_circuit`、`validate_circuit`、`check_connections`、`export_circuit_image`。先只报告状态，不要创建或修改文件。
+   > 检查 Logisim Classic Lab MCP 是否已连接。请调用 `logisim_env_info(probe_version=true)` 查询程序版本，并确认你能看到 `build_circuit`、`validate_circuit`、`check_connections`、`export_circuit_image`。先只报告状态，不要创建或修改文件。
 
 4. 确认 Codex 报告了可用的程序路径、版本和工具。如果它说工具不存在，先检查 Codex 的 MCP 配置和服务器日志并重启；如果报告找不到 Java 或 Logisim，检查 `LOGISIM_HUST_EXE` 和 Java 安装。此时不要继续要求它画图。
 

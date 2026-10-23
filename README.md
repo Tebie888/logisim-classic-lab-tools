@@ -1,86 +1,125 @@
 # Logisim Classic Lab Tools
 
-A local MCP server and Codex skill for inspecting, validating, editing, simulating, and documenting classic Logisim `.circ` projects. The tools are independent, community-maintained software and are not affiliated with any university or with the original Logisim authors.
+[中文](README.zh-CN.md) · [Install](docs/installation.md) · [Compatibility](docs/compatibility.md) · [Troubleshooting](docs/troubleshooting.md)
 
-兼容经典 Logisim 2.3.x、2.6.x、2.7.x 工程；课程版分支的实测兼容版本为 Logisim-HUST 2.15.0.2。版本号仅说明测试环境，不代表官方支持。项目名和品牌不代表学校或原软件作者。
+One local **stdio MCP server + one standard Agent Skill** for inspecting,
+building, safely editing, validating, simulating and rendering classic Logisim
+`.circ` projects. Server **1.4.1** exposes **29 tools**, retaining all 28 public
+1.3.2 tool names and the newer local propagation feature.
 
-## Components
+Classic Logisim 2.3.x, 2.6.x, 2.7.x (`version="1.0"`) and the tested
+Logisim-HUST 2.15.0.2 are the target. **Logisim-evolution 4.x is not supported.**
+This independent community project is not affiliated with a university, the
+original Logisim authors or any AI client vendor.
 
-- `mcp/`: Python stdio MCP server (28 tools) with structural/runtime validation, connectivity analysis, safe edits, batch building, simulation, and PNG circuit export.
-- `skills/logisim-classic-lab-workflow/`: Codex workflow skill with references and optional Windows helper scripts.
-- `examples/`: small synthetic example circuits.
+## What is included
 
-## Requirements
+- `mcp/`: standard-library Python server, Java port/image/propagation bridges,
+  protected builders, connectivity checks, backups and regression tests.
+- `skills/logisim-classic-lab-workflow/`: the canonical portable `SKILL.md`,
+  references, a worked tutorial and optional Windows helpers.
+- `examples/`: anonymous synthetic half-adder, full-adder and counter circuits.
+- `configs/`: lightweight client formats; `scripts/setup.py` generates local
+  entries, compiles bridges and installs the same Skill without overwriting.
 
-- Python 3.8 or newer; MCP server and tests use only the standard library.
-- Java runtime compatible with the Logisim executable for simulation and runtime-backed validation/export. Java 8 bytecode is used for the bridge classes.
-- Your own compatible classic Logisim executable or JAR. It is not included. Set `LOGISIM_HUST_EXE` to its full path. Logisim Evolution 4.x is not supported for editing or simulation.
-- `javac` is only needed to compile the bridge classes; prebuilt `.class` files are generated locally and excluded from this repository.
+The [tool inventory](docs/tools.md) explains each of the 29 tools. Newer local
+features include native propagation traces, component/viewport PNGs, HUST GUI
+source markers and smaller optional builder responses. The [audit](docs/audit.md)
+records what was compared, retained and corrected.
+
+## Client status
+
+The linked official client docs describe supported standards; they do not
+constitute certification of this toolkit. **Configuration examples are not
+successful client tests.** The full [matrix](docs/compatibility.md) separates
+Skill discovery, connection, tool listing, invocation and runtime execution.
+
+| Client | Current project evidence |
+| --- | --- |
+| OpenAI Codex | Existing local 1.4.0 MCP environment call observed; 1.4.1 entry supplied, fresh Codex session not tested |
+| Claude Code | Official-format configuration and Skill locations; session unverified |
+| Cursor | Official-format configuration and Skill locations; session unverified |
+| Gemini CLI | Official-format configuration and Skill locations; session unverified |
+| OpenCode | Official-format configuration and Skill locations; session unverified |
+| ZCode | Project Skill discovery verified in CLI 0.17.0; model-selection prerequisite blocked session MCP test |
+| DeepSeek Harness | Real headless session loaded Skill, exposed 29 tools and called read-only MCP tools |
+| VS Code / GitHub Copilot | Local/portable formats documented; session unverified |
+| Other MCP / Agent Skills hosts | Standards-based entry example; host-specific support must be tested |
+
+See [ZCode](docs/zcode.md) and [DeepSeek Harness](docs/deepseek-harness.md).
+No per-client server fork or proprietary core dependency is introduced.
 
 ## Install MCP
 
-1. Clone this repository and build bridge classes against your locally installed Logisim executable:
+Requires **Python 3.8+**, your own compatible **classic Logisim executable/JAR**,
+and compatible **Java** for runtime operations. A **JDK** is needed to compile
+bridges targeting Java 8. No pip install is required. **Logisim and third-party
+JARs are not bundled.** XML inspection can run without Java.
 
-   ```powershell
-   cd mcp
-   javac --release 8 -encoding UTF-8 -classpath "$env:LOGISIM_HUST_EXE" PortProbe.java CircuitImage.java
-   ```
-
-2. Add a stdio server entry to your MCP client. Use an absolute path to `mcp/server.py`:
-
-   ```json
-   {
-     "mcpServers": {
-       "logisim-classic-lab-mcp": {
-         "command": "python",
-         "args": ["<REPOSITORY_DIR>/mcp/server.py"],
-         "env": { "LOGISIM_HUST_EXE": "<PATH_TO_LOGISIM_EXECUTABLE>" }
-       }
-     }
-   }
-   ```
-
-   On Windows, `mcp/run-mcp.cmd` can be used as the command. Reconnect the MCP client after changing its configuration.
-
-3. Verify discovery and the executable:
-
-   ```powershell
-   python mcp/server.py --version
-   python mcp/server.py --print-config
-   python mcp/server.py --self-test <PATH_TO_TEST_CIRCUIT>
-   ```
-
-The server can inspect project XML without Java, but simulation and image export require a compatible runtime. Set `LOGISIM_MCP_WORKSPACE` to restrict file operations to a workspace. `LOGISIM_MCP_MAX_TIMEOUT` controls the simulation timeout cap.
-
-### DeepSeek Harness
-
-DeepSeek Harness uses its `@deepseek-ai/dsh-mcp-client` adapter; the generic `mcpServers` JSON above is for clients that support that format and does not configure Harness. Follow the [DeepSeek Harness setup guide](docs/deepseek-harness.md). A sanitized [session test note](docs/harness-session-test.md) records a real integration check and its result. In Harness, MCP tools appear with names such as `mcp__logisim-classic-lab__logisim_env_info` after the server entry is active and the session reconnects.
-
-If `logisim_env_info` reports `exe_exists=false`, set `LOGISIM_HUST_EXE` to the full path of your compatible Logisim executable. The server does not search the whole computer by default. You can instead set `LOGISIM_SEARCH_ROOT` to a directory to search recursively for `logisim-hust-*.exe`, or pass an explicit `exe` path to the environment tool.
-
-## Install the skill
-
-Copy `skills/logisim-classic-lab-workflow/` to a skill directory your agent discovers. For DeepSeek Harness, `.agents/skills/logisim-classic-lab-workflow/` is a supported project location; Codex can use its configured skills directory. Preserve the folder name and `SKILL.md`, then restart or refresh the session so it discovers the skill. The scripts in that folder are optional; the MCP is preferred when connected. Windows Word automation and PDF page rendering are optional report-checking features and require Microsoft Word plus the Python package `pypdfium2`.
-
-## 中文使用教程
-
-从 Codex 描述需求到建图、连线检查、输入验证和导出 PNG 的流程见[使用教程](skills/logisim-classic-lab-workflow/tutorial.md)；DeepSeek Harness 的配置步骤见[Harness 接入指南](docs/deepseek-harness.md)。仓库附有可直接打开的半加器 `.circ` 示例和状态预览图。
-
-## Tests and examples
+Windows PowerShell quick start (replace the illustrative executable path):
 
 ```powershell
-python -m unittest discover -s mcp -p "test*.py" -v
-python mcp/build_examples.py <EMPTY_OUTPUT_DIRECTORY>
+git clone https://github.com/Tebie888/logisim-classic-lab-tools.git
+Set-Location logisim-classic-lab-tools
+$env:LOGISIM_HUST_EXE = 'C:/path/to/your/logisim.exe'
+python scripts/setup.py compile
+python scripts/setup.py doctor
+New-Item -ItemType Directory -Force .local/circuits | Out-Null
+python scripts/setup.py install-skill --destination "$env:USERPROFILE/.agents/skills/logisim-classic-lab-workflow"
+python scripts/setup.py config --client codex --workspace .local/circuits --output .local/codex.toml
 ```
 
-Bridge compilation is separate from unit tests. The example circuits are small synthetic smoke tests; the validation summary records the checks run for this release.
+Merge the generated entry into your client's configuration, reconnect MCP and
+refresh Skills. For another client, change `--client` and choose its Skill
+installation directory from [installation](docs/installation.md) and
+[configuration destinations](configs/README.md). Generated entries contain
+personal paths and must stay local. Existing installs/config files are never
+replaced by the helper.
 
-## Compatibility and limitations
+Linux/macOS use `python3`, a compatible JAR, `export LOGISIM_HUST_EXE=...` and
+`$HOME` instead. Their current runtime verification status is explicitly
+[documented](docs/compatibility.md); Windows GUI/Word helpers are not portable.
 
-The project supports classic Logisim XML (`version="1.0"`) with source versions 2.3.x, 2.6.x and 2.7.x, plus the tested Logisim-HUST 2.15.0.2 course fork. Other sources can be diagnosed read-only where possible. Logisim Evolution 4.x is a different project format and is not supported for edits or simulation.
+## First natural-language task
 
-Runtime layout reports are produced after simulation, when Probe display widths are known. Static layout checks can miss display overlap. Connectivity checks compare against declared expected nets; they cannot infer design intent when no expected network manifest is provided. The project is not affiliated with HUST, any university, or the original Logisim authors.
+First ask your Agent to load `logisim-classic-lab-workflow`, list the MCP tools
+and actually call `logisim_env_info(probe_version=true)`. Then:
+
+> Create a new half-adder in my configured circuit workspace: A/B inputs,
+> SUM=A XOR B and CARRY=A AND B. Query real ports, dry-run the build, then
+> create without overwriting. Save the connection manifest, perform runtime
+> validation and expected-net checks, and export four PNGs for 00, 01, 10, 11.
+> Assert (SUM,CARRY) = (0,0), (1,0), (1,0), (0,1).
+
+Read the [worked Chinese tutorial](skills/logisim-classic-lab-workflow/tutorial.md).
+`simulate_tty` runs only the file's `<main>`; table tools record observed output
+changes and **do not enumerate inputs**. A timeout is not a pass. Propagation
+records actual engine events, not physical nanoseconds or a replacement model.
+
+## Safety and verification
+
+Edits validate candidate XML before byte backups and atomic replacement.
+`dry_run` validates without committing. New projects, images and trace directories
+refuse overwrite. Set `LOGISIM_MCP_WORKSPACE` to fence circuit/output paths and
+external circuit libraries. External JARs in a fenced workspace require explicit
+trust. This is a path boundary, **not an OS sandbox**; use trusted runtimes and
+libraries. See [troubleshooting](docs/troubleshooting.md).
+
+```sh
+python -m unittest discover -s mcp -p "test*.py" -v
+python mcp/build_examples.py .local/generated-examples
+```
+
+Runtime cases skip without a user-supplied runtime/compiled bridges. Fresh
+results are in [VALIDATION.json](VALIDATION.json); original historical evidence
+is distinguished from the current run. Before publishing, review the explicit
+[file allowlist](scripts/publish-allowlist.txt), run `python scripts/check_release.py`
+and inspect staged blobs with `--staged`. The [privacy audit](docs/privacy-audit.md)
+records exclusions and scan limitations. Do not publish personal circuits,
+reports, real client configurations, credentials or session logs.
 
 ## License
 
-MIT. The license applies to original source code, documentation, skill files, scripts, and included synthetic examples in this repository. Logisim itself and other third-party components are not included and remain under their respective licenses.
+MIT for this repository's original source, documentation, scripts and synthetic
+examples. Logisim and other third-party components remain under their own
+licenses and must be obtained separately.

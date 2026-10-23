@@ -58,6 +58,19 @@ class CircuitFixture(unittest.TestCase):
         self.assertEqual(before, self.file.read_bytes())
         return json.loads(result["content"][0]["text"])
 
+class RuntimeFixture(CircuitFixture):
+    def setUp(self):
+        super().setUp()
+        try:
+            s.find_exe()
+            s.find_java()
+        except s.ToolError as exc:
+            self.skipTest(str(exc))
+        for helper in ('PortProbe.class', 'CircuitImage.class'):
+            if not SERVER.with_name(helper).is_file():
+                self.skipTest('Compile Java bridges to enable runtime tests')
+
+
 class CircuitTests(CircuitFixture):
     def test_edit_and_restore_exact_bytes(self):
         for newline, bom in (("\n", False), ("\r\n", False), ("\n", True)):
@@ -258,7 +271,8 @@ class ProtocolTests(unittest.TestCase):
         replies = [json.loads(x) for x in result.stdout.splitlines()]
         self.assertEqual([x["id"] for x in replies], [1, 2, 3, 4])
         names = {x["name"] for x in replies[1]["result"]["tools"]}
-        self.assertEqual(len(names), 28)
+        self.assertEqual(names, set(s.TOOL_IMPL))
+        self.assertIn("trace_propagation", names)
         self.assertIn("get_simulation_table", names)
         self.assertEqual(replies[2]["error"]["code"], -32602)
 
@@ -325,14 +339,7 @@ class RealSimulationTests(CircuitFixture):
         self.assertEqual(cli.returncode, 1)
 
 
-class BuilderTests(CircuitFixture):
-    def setUp(self):
-        super().setUp()
-        try:
-            s.find_exe(); s.find_java()
-        except s.ToolError as exc:
-            self.skipTest(str(exc))
-
+class BuilderTests(RuntimeFixture):
     def fresh(self, name="built.circ"):
         self.file = self.root / name
 

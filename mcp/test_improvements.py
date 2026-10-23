@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import struct
 import unittest
-from test_server import CircuitFixture, s, BASE
+from test_server import RuntimeFixture, s, BASE
 
 class DiagnosticTests(unittest.TestCase):
     def test_repeated_legacy_marker_is_summarized_but_real_e_survives(self):
@@ -16,7 +16,7 @@ class DiagnosticTests(unittest.TestCase):
         t=s.parse_tty_table('Q\n1    Error！ additional diagnostic\n')
         self.assertEqual(len(t['diagnostics']),1)
 
-class ImprovedToolTests(CircuitFixture):
+class ImprovedToolTests(RuntimeFixture):
     def test_dense_ports_use_readable_labels_and_separated_stubs(self):
         self.file.unlink()
         nodes=[{'id':'dec','name':'Decoder','loc':'(300,300)','attrs':{'select':2}}]
