@@ -1,0 +1,31 @@
+name: Portable checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  standard-library:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            python: '3.8'
+          - os: ubuntu-latest
+            python: '3.14'
+          - os: windows-latest
+            python: '3.8'
+          - os: windows-latest
+            python: '3.14'
+          - os: macos-latest
+            python: '3.14'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Unit tests (runtime cases skip without user-provided Logisim)
+        run: python -m unittest discover -s mcp -p "test*.py" -v
+      - name: Publication file checks
+        run: python scripts/check_release.py

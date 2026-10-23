@@ -65,7 +65,7 @@ from xml.sax.saxutils import escape
 # --------------------------------------------------------------------------
 
 SERVER_NAME = "logisim-classic-lab-mcp"
-SERVER_VERSION = "1.3.2"
+SERVER_VERSION = "1.4.1"
 PROTOCOL_VERSION = "2024-11-05"
 SUPPORTED_PROTOCOLS = {"2024-11-05", "2025-03-26", "2025-06-18"}
 
@@ -84,14 +84,8 @@ RE_XML_TOKEN = re.compile(
 )
 
 INSTRUCTIONS = (
-    "面向经典 Logisim 2.7（Logisim-HUST / 计组虚拟实验）的 .circ 工具集。"
-    "读电路用 describe_circuit / list_pins，验证作业用 validate_circuit，"
-    "无界面仿真用 simulate_tty / get_simulation_table；两者只接受 file 并运行文件的 main 电路，不接受 circuit 选择参数。"
-    "编辑前请先 validate_circuit；编辑工具校验候选文件后自动备份并原子提交。"
-    "没有 halt 引脚时 -tty 可能运行到超时；get_simulation_table 和兼容别名 get_truth_table 都不自动枚举输入。"
-    "完整搭建用 build_project/build_circuit，支持元件、子电路、批量网络和 dry_run；"
-    "先 list_component_catalog 获取真实名称和属性，get_component_ports 获取端口编号、坐标与说明。"
-    "注意：本工具只处理经典 2.3/2.6/2.7 schema，不能处理 Logisim-evolution 4.x 的 .circ。"
+    "经典 Logisim .circ 工具；支持 2.3/2.6/2.7 与 Logisim-HUST 2.15（version=1.0），不支持 Evolution 4.x。"
+    "TTY仿真和表格只运行 <main>，不自动枚举输入。修改前先校验；编辑会校验候选、备份并原子提交。"
 )
 
 
@@ -164,6 +158,7 @@ def find_java(explicit: str | None = None) -> str:
         cands.append(os.environ["LOGISIM_MCP_JAVA"])
     if os.environ.get("JAVA_HOME"):
         cands.append(str(Path(os.environ["JAVA_HOME"]) / "bin" / "java.exe"))
+        cands.append(str(Path(os.environ["JAVA_HOME"]) / "bin" / "java"))
     which = shutil.which("java")
     if which:
         cands.append(which)
@@ -176,7 +171,7 @@ def find_java(explicit: str | None = None) -> str:
         if p.is_file():
             return str(p.resolve())
     raise ToolError(
-        "找不到 java.exe。请安装 JDK 8+（本机 JDK 17 可用），"
+        "找不到 Java。请安装兼容运行时的 Java 8+，"
         "或设置 LOGISIM_MCP_JAVA / JAVA_HOME。"
     )
 
@@ -209,14 +204,60 @@ def parse_project(path: Path) -> dict:
     return parse_project_bytes(path.read_bytes(), str(path))
 
 
-def parse_project_bytes(raw: bytes, label: str = "candidate") -> dict:
-    # Course files do not need DTDs; reject them rather than expand entities.
+class _NoDTD(ET.TreeBuilder):
+    def doctype(self, name, pubid, system):
+        raise ToolError("不支持带 DTD 的 .circ 文件")
+
+
+def _parse_xml(raw: bytes, label: str):
+    # The parser target also catches UTF-16 declarations before entity expansion.
     if b"<!DOCTYPE" in raw.upper():
         raise ToolError("不支持带 DTD 的 .circ 文件")
     try:
-        root = ET.fromstring(raw)
+        return ET.fromstring(raw, parser=ET.XMLParser(target=_NoDTD()))
     except ET.ParseError as exc:
         raise ToolError(f".circ XML 解析失败（{label}）：{exc}")
+
+
+def check_runtime_libraries(path: Path, raw: bytes | None = None, _visited=None) -> None:
+    """Preflight transitive external libraries when a workspace fence is set.
+
+    The fence is not an OS sandbox. User-selected Logisim/Java and explicitly
+    trusted JAR libraries remain executable code with the user's permissions.
+    """
+    if not os.environ.get("LOGISIM_MCP_WORKSPACE"):
+        return
+    path = resolve_circ(str(path), must_exist=raw is None)
+    visited = set() if _visited is None else _visited
+    if path in visited:
+        return
+    if len(visited) >= 256:
+        raise ToolError("外部电路库超过 256 个；请缩小工作区库依赖")
+    visited.add(path)
+    root = _parse_xml(path.read_bytes() if raw is None else raw, str(path))
+    for lib in root.iter("lib"):
+        desc = lib.get("desc", "")
+        if desc.startswith("#"):
+            continue
+        kind, sep, reference = desc.partition("#")
+        if not sep or kind not in {"file", "jar"} or not reference:
+            raise ToolError("工作区运行时仅允许内建库、file# 电路库或显式信任的 jar# 库")
+        if kind == "jar":
+            reference, sep, class_name = reference.rpartition("#")
+            if not sep or not reference or not class_name:
+                raise ToolError("无效的 jar# 库描述")
+            if os.environ.get("LOGISIM_MCP_ALLOW_JAR_LIBRARIES") != "1":
+                raise ToolError("外部 JAR 库可执行代码；审查后设置 LOGISIM_MCP_ALLOW_JAR_LIBRARIES=1 才允许加载")
+        target = Path(reference).expanduser()
+        if not target.is_absolute():
+            target = path.parent / target
+        target = resolve_circ(str(target))
+        if kind == "file":
+            check_runtime_libraries(target, _visited=visited)
+
+
+def parse_project_bytes(raw: bytes, label: str = "candidate") -> dict:
+    root = _parse_xml(raw, label)
     if root.tag != "project":
         raise ToolError(f"不是 Logisim 工程文件：根元素是 <{root.tag}>，应为 <project>")
 
@@ -445,9 +486,18 @@ def atomic_replace(path: Path, raw: bytes, expected: bytes) -> None:
             stream.flush()
             os.fsync(stream.fileno())
         shutil.copymode(path, tmp)
-        if path.read_bytes() != expected:
-            raise ToolError("文件已被其他程序修改，本次提交取消；请重新读取电路")
-        os.replace(tmp, path)
+        for attempt in range(4):
+            if path.read_bytes() != expected:
+                raise ToolError("文件已被其他程序修改，本次提交取消；请重新读取电路")
+            try:
+                os.replace(tmp, path)
+                break
+            except PermissionError as exc:
+                # Windows scanners/editors may briefly deny rename. Never retry
+                # an unrelated permission error or overwrite an intervening edit.
+                if getattr(exc, "winerror", None) not in {5, 32, 33} or attempt == 3:
+                    raise
+                time.sleep(0.02 * (attempt + 1))
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -512,6 +562,7 @@ def run_tty(circ: Path, fmt: str, timeout_sec: int = 30,
     project = parse_project(circ)
     if not supported_source(project["source"]) or project["version"] != "1.0":
         raise ToolError("仿真只支持经典 2.3/2.6/2.7 和 HUST 2.15 的 version=1.0 工程")
+    check_runtime_libraries(circ)
     fmt = fmt.strip()
     parts = [p.strip() for p in fmt.split(",") if p.strip()]
     if not parts:
@@ -703,9 +754,9 @@ def tool_describe_circuit(a: dict) -> dict:
     d = parse_project(p)
     c = pick_circuit(d, a.get("circuit"))
     comps = c["components"]
-    pins = [pin_info(x) for x in comps if x["name"] == "Pin"]
+    pins = [pin_info(x) for x in comps if x["name"] == "Pin" and not x.get("is_subcircuit")]
     names = set(d["circuit_names"])
-    subs = sorted({x["name"] for x in comps if x["name"] in names})
+    subs = sorted({x["name"] for x in comps if x.get("is_subcircuit")})
     hist = Counter(f'{x["name"]} [{x["libdesc"]}]' for x in comps)
 
     result: dict = {
@@ -740,7 +791,7 @@ def tool_list_pins(a: dict) -> dict:
     p = resolve_circ(a["file"])
     d = parse_project(p)
     c = pick_circuit(d, a.get("circuit"))
-    pins = [pin_info(x) for x in c["components"] if x["name"] == "Pin"]
+    pins = [pin_info(x) for x in c["components"] if x["name"] == "Pin" and not x.get("is_subcircuit")]
     pins.sort(key=lambda x: (x["direction"], x["label"] or "~", x["loc"]))
     return {
         "circuit": c["name"],
@@ -835,7 +886,9 @@ def tool_list_library_index(a: dict) -> dict:
 
 
 def supported_source(source: str | None) -> bool:
-    return bool(re.fullmatch(r"2\.(?:3|6|7|15)(?:\.\d+)*", source or ""))
+    # HUST's own GUI writes its Launch4j version suffix into the source field.
+    # Accept that suffix only for HUST 2.15; keep the original bytes untouched.
+    return bool(re.fullmatch(r"(?:2\.(?:3|6|7|15)(?:\.\d+)*|2\.15(?:\.\d+)*\.exe)", source or ""))
 
 
 def validate(data: dict, circuit: dict) -> dict:
@@ -894,7 +947,7 @@ def validate(data: dict, circuit: dict) -> dict:
             if attrs.get("output", "false") not in {"true", "false"}:
                 add("error", "invalid_pin_direction", f"Pin {c['loc']} 的 output 必须为 true/false")
 
-    pins = [pin_info(c) for c in comps if c["name"] == "Pin"]
+    pins = [pin_info(c) for c in comps if c["name"] == "Pin" and not c.get("is_subcircuit")]
     labels = [x["label"] for x in pins if x["label"]]
     dupes = [l for l, n in Counter(labels).items() if n > 1]
     if dupes:
@@ -958,7 +1011,7 @@ def validate(data: dict, circuit: dict) -> dict:
         "连通判据都会在官方课程电路上误报。判断连线是否有效请用 simulate_tty / "
         "get_simulation_table 检查引脚值，并与预期输出对照；E 也可能由宽度或驱动冲突造成。")
 
-    subs = sorted({c["name"] for c in comps if c["name"] in names})
+    subs = sorted({c["name"] for c in comps if c.get("is_subcircuit")})
     return {
         "circuit": circuit["name"],
         "components": len(comps),
@@ -1722,6 +1775,11 @@ _connections.install(_ServerAPI())
 import image_export as _image_export
 _image_export.install(_ServerAPI())
 
+_propagation_spec = importlib.util.spec_from_file_location("logisim_propagation", Path(__file__).with_name("propagation.py"))
+_propagation = importlib.util.module_from_spec(_propagation_spec)
+_propagation_spec.loader.exec_module(_propagation)
+_propagation.install(_ServerAPI())
+
 
 def handle(req: dict) -> None:
     method = req.get("method")
@@ -1738,6 +1796,9 @@ def handle(req: dict) -> None:
 
     if method == "initialize":
         client_ver = params.get("protocolVersion")
+        if not isinstance(client_ver, str) or not client_ver.strip():
+            _err(rid, -32602, "initialize.protocolVersion 必须为非空字符串")
+            return
         ver = client_ver if client_ver in SUPPORTED_PROTOCOLS else PROTOCOL_VERSION
         _ok(rid, {
             "protocolVersion": ver,

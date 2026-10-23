@@ -18,7 +18,7 @@ import org.w3c.dom.*;
 public class CircuitImage {
  static Circuit circuit; static CircuitState state;
  static Map<String,com.cburch.logisim.comp.Component> pins=new LinkedHashMap<>();
- static void inputs(Element step) {
+ static void drive(Element step) {
   NodeList values=step.getElementsByTagName("pin");
   for(int i=0;i<values.getLength();i++){
    Element value=(Element)values.item(i);String label=value.getAttribute("label");
@@ -30,34 +30,53 @@ public class CircuitImage {
    if(v<0 || v>=(1L<<width))throw new IllegalArgumentException("Input value out of range: "+label+" width="+width);
    Pin.FACTORY.setValue(state.getInstanceState(c),Value.createKnown(BitWidth.create(width),(int)v));state.markComponentAsDirty(c);
   }
-  settle();
  }
+ static void inputs(Element step) {drive(step);settle();}
  static void settle(){state.getPropagator().propagate();if(state.getPropagator().isOscillating())throw new IllegalStateException("Simulation oscillates");}
- public static void main(String[] args) {
-  try{
-   DocumentBuilderFactory df=DocumentBuilderFactory.newInstance();df.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
-   Element request=df.newDocumentBuilder().parse(new File(args[1])).getDocumentElement();
-   LogisimFile f=new PortProbe.StrictLoader().openLogisimFile(new File(args[0]));
-   circuit=f.getCircuit(request.getAttribute("circuit"));if(circuit==null)throw new IllegalArgumentException("Unknown circuit");
-   Project project=new Project(f);state=project.getCircuitState(circuit);
+ static void load(File source,String name) throws Exception {
+   pins.clear();LogisimFile f=new PortProbe.StrictLoader().openLogisimFile(source);
+   circuit=f.getCircuit(name);if(circuit==null)throw new IllegalArgumentException("Unknown circuit: "+name);
+   state=new Project(f).getCircuitState(circuit);
    for(com.cburch.logisim.comp.Component c:circuit.getNonWires())if(c.getFactory()==Pin.FACTORY){
     String label=c.getAttributeSet().getValue(StdAttr.LABEL);
     if(!label.isEmpty() && pins.put(label,c)!=null)throw new IllegalArgumentException("Ambiguous pin label: "+label);
    }
-   settle();NodeList steps=request.getElementsByTagName("step");
-   for(int i=0;i<steps.getLength();i++)inputs((Element)steps.item(i));
-   int ticks=Integer.parseInt(request.getAttribute("ticks"));
-   for(int i=0;i<ticks;i++){state.getPropagator().tick();settle();}
+   settle();
+ }
+ static Map<String,Object> render(Element request,File output) throws Exception {
    int scale=Integer.parseInt(request.getAttribute("scale")),pad=Integer.parseInt(request.getAttribute("padding"));
    BufferedImage scratch=new BufferedImage(1,1,BufferedImage.TYPE_INT_RGB);Graphics2D sg=scratch.createGraphics();Bounds b=circuit.getBounds(sg);sg.dispose();
+   com.cburch.logisim.comp.Component selected=null;String kind="circuit";
+   if(request.hasAttribute("component_name")) {
+    for(com.cburch.logisim.comp.Component c:circuit.getNonWires())if(c.getFactory().getName().equals(request.getAttribute("component_name")) && c.getLocation().toString().equals(request.getAttribute("component_loc"))){
+     if(selected!=null)throw new IllegalArgumentException("Ambiguous component");selected=c;
+    }
+    if(selected==null)throw new IllegalArgumentException("Selected component not found");
+    b=selected.getBounds();kind="component";
+   }
+   if(request.hasAttribute("viewport_x")) {
+    b=Bounds.create(Integer.parseInt(request.getAttribute("viewport_x")),Integer.parseInt(request.getAttribute("viewport_y")),Integer.parseInt(request.getAttribute("viewport_width")),Integer.parseInt(request.getAttribute("viewport_height")));kind="viewport";
+   }
    long width=(b.getWidth()+2L*pad)*scale,height=(b.getHeight()+2L*pad)*scale;
    if(width<1 || height<1 || width*height>24000000L)throw new IllegalArgumentException("Image exceeds 24 million pixels; reduce scale or circuit extent");
    BufferedImage img=new BufferedImage((int)width,(int)height,BufferedImage.TYPE_INT_RGB);Graphics2D g=img.createGraphics();
    g.setColor(Color.WHITE);g.fillRect(0,0,(int)width,(int)height);g.scale(scale,scale);g.translate(pad-b.getX(),pad-b.getY());g.setColor(Color.BLACK);
    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
    ComponentDrawContext ctx=new ComponentDrawContext(new JPanel(),circuit,state,g,g){public Object getGateShape(){return "shaped";}};
-   ctx.setShowState(Boolean.parseBoolean(request.getAttribute("show_state")));ctx.setShowColor(true);circuit.draw(ctx,Collections.emptySet());g.dispose();
-   if(!ImageIO.write(img,"png",new File(args[2])))throw new IOException("PNG encoder unavailable");
+   ctx.setShowState(Boolean.parseBoolean(request.getAttribute("show_state")));ctx.setShowColor(true);
+   if(selected==null)circuit.draw(ctx,Collections.emptySet());else selected.draw(ctx);g.dispose();
+   if(!ImageIO.write(img,"png",output))throw new IOException("PNG encoder unavailable");
+   return PortProbe.obj("width",width,"height",height,"export_kind",kind,"render_region",PortProbe.obj("x",b.getX(),"y",b.getY(),"width",b.getWidth(),"height",b.getHeight()));
+ }
+ public static void main(String[] args) {
+  try{
+   DocumentBuilderFactory df=DocumentBuilderFactory.newInstance();df.setFeature("http://apache.org/xml/features/disallow-doctype-decl",true);
+   Element request=df.newDocumentBuilder().parse(new File(args[1])).getDocumentElement();
+   load(new File(args[0]),request.getAttribute("circuit"));NodeList steps=request.getElementsByTagName("step");
+   for(int i=0;i<steps.getLength();i++)inputs((Element)steps.item(i));
+   int ticks=Integer.parseInt(request.getAttribute("ticks"));
+   for(int i=0;i<ticks;i++){state.getPropagator().tick();settle();}
+   Map<String,Object> metadata=render(request,new File(args[2]));
    Map<String,Object> pinValues=new LinkedHashMap<>();
    for(Map.Entry<String,com.cburch.logisim.comp.Component> p:pins.entrySet()){
     Value v=Pin.FACTORY.getValue(state.getInstanceState(p.getValue()));
@@ -70,7 +89,8 @@ public class CircuitImage {
     layoutComponents.add(PortProbe.obj("name",c.getFactory().getName(),"loc",c.getLocation().toString(),"attributes",attributes,
      "bounds",PortProbe.obj("x",cb.getX(),"y",cb.getY(),"width",cb.getWidth(),"height",cb.getHeight())));
    }
-   System.out.println(PortProbe.json(PortProbe.obj("width",width,"height",height,"pin_values",pinValues,"ticks",ticks,"steps",steps.getLength(),"layout_components",layoutComponents)));
+   metadata.putAll(PortProbe.obj("pin_values",pinValues,"ticks",ticks,"steps",steps.getLength(),"layout_components",layoutComponents));
+   System.out.println(PortProbe.json(metadata));
   }catch(Throwable t){t.printStackTrace(System.err);System.exit(2);}
   System.exit(0);
  }

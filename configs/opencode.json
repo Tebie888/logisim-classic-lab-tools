@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "logisim-classic-lab": {
+      "type": "local",
+      "command": ["<PYTHON_EXECUTABLE>", "<REPOSITORY>/mcp/server.py"],
+      "environment": {
+        "LOGISIM_HUST_EXE": "<LOGISIM_EXECUTABLE_OR_JAR>",
+        "LOGISIM_MCP_WORKSPACE": "<CIRCUIT_WORKSPACE>"
+      },
+      "enabled": true
+    }
+  }
+}

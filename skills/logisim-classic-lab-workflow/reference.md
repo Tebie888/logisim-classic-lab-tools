@@ -1,6 +1,6 @@
 # Classic Logisim Runtime Reference
 
-命令行、格式和端口说明针对本课程包。路径、Java 和程序属性表是本机历史发现；使用前以 `logisim_env_info(probe_version=true)` 或实际命令复核。MCP 1.3 默认结构校验不证明功能正确；runtime=true 可加载真实端口检查冲突，预期网络、可读布局和导出见 [完整搭建参考](full-circuit-building.md)。
+命令行、格式和端口说明针对本课程包。路径、Java 和程序属性表是本机历史发现；使用前以 `logisim_env_info(probe_version=true)` 或实际命令复核。默认结构校验不证明功能正确；runtime=true 可加载真实端口检查冲突，预期网络、可读布局和导出见 [完整搭建参考](full-circuit-building.md)。
 
 ## 1. 命令行选项全表（来自 `-help` 与 jar 内 `resources/logisim/en/start.properties`，已实测）
 
@@ -237,3 +237,9 @@ HUST -tty 多位值为十六进制；表头字段宽度为 ceil(width/4)+5，长
 共 28 个工具，新增 check_connections 与 export_circuit_image。默认建图用真实端口向外扇出和可读网络名，返回布局摘要与 connection_manifest；改布局后用保存的预期清单检查同位宽短接，再对照功能刺激并查看导出图。自动扇出是局部布局，仍需明确元件间距。图像由独立真实仿真状态生成，源文件不保存，输出 PNG 不覆盖已有文件。
 
 解析器将精确匹配的重复行尾 Error！/Error! 汇总为 legacy_marker，原始输出保留，真实信号 E 与未知尾部诊断仍保留。不能用文本标记的次数证明逻辑故障或震荡。
+
+## 10. MCP 1.4.1 当前入口
+
+当前为 29 个工具。1.4 新增的 trace_propagation、局部/元件导图及构建返回精简保持原有默认行为；详见 propagation-measurement.md 和当前工具 Schema。上面的 1.1/1.2/1.3 章节是版本沿革，不是当前工具数量。
+
+围栏内运行时会递归检查外部 file# 电路库；外部 JAR 库需显式信任。协议非法参数返回 -32602，执行错误返回 isError=true。更新代码后重连服务，不能只更新 Skill 就假定运行中的工具也已更新。

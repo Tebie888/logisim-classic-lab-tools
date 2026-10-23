@@ -12,26 +12,22 @@ rem  files with the OEM code page, so non-ASCII paths inside the script
 rem  corrupt the batch parser. Override the location with the
 rem  LOGISIM_HUST_EXE environment variable when needed.
 rem ==============================================================
-setlocal enabledelayedexpansion
+setlocal DisableDelayedExpansion
 
 if not defined LOGISIM_HUST_EXE (
   echo [ERROR] Set LOGISIM_HUST_EXE to the Logisim executable path
   echo         Set LOGISIM_HUST_EXE to its full path and retry.
-  pause
   exit /b 1
 )
 
-if "%~1"=="" (
-  start "" "%LOGISIM_HUST_EXE%"
-  exit /b 0
-)
-
 rem Options (-version / -help / -tty ...) run in this console; files open detached.
-echo %~1 | findstr /b /c:"-" >nul 2>nul
-if not errorlevel 1 (
-  "%LOGISIM_HUST_EXE%" %*
-  exit /b %ERRORLEVEL%
-)
+rem Keep the argument quoted; echoing a filename would interpret ampersands.
+set "FIRST_ARG=%~1"
+if "%FIRST_ARG:~0,1%"=="-" goto console
 
 start "" "%LOGISIM_HUST_EXE%" %*
-exit /b 0
+exit /b %ERRORLEVEL%
+
+:console
+"%LOGISIM_HUST_EXE%" %*
+exit /b %ERRORLEVEL%
