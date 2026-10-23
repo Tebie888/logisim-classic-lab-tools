@@ -73,5 +73,22 @@ actual execution host; cloud clients cannot automatically use desktop paths.
   and [MCP](https://code.visualstudio.com/docs/agent-customization/mcp-servers)
 
 See [installation](installation.md), [configuration destinations](../configs/README.md)
-and [VALIDATION.json](../VALIDATION.json). A new CI workflow is not a test pass
-until it runs.
+and [VALIDATION.json](../VALIDATION.json).
+
+## Executed portable CI
+
+[Pull-request run 39966626445](https://github.com/Tebie888/logisim-classic-lab-tools/actions/runs/39966626445)
+passed all five jobs for implementation commit `99c7567`:
+
+| Runner | Python | Portable tests and publication gate |
+| --- | --- | --- |
+| Ubuntu 22.04 | 3.8 | Passed |
+| Ubuntu latest | 3.14 | Passed |
+| Windows latest | 3.8 | Passed |
+| Windows latest | 3.14 | Passed |
+| macOS latest | 3.14 | Passed |
+
+Runtime-dependent tests were skipped when Logisim was unavailable. This verifies
+portable Python behavior and release checks, not Java bridge execution or
+Logisim simulation on Linux/macOS. Subsequent evidence-only documentation
+changes do not replace the implementation tested by this run.

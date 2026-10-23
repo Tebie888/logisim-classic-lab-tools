@@ -88,3 +88,8 @@ of the child status for console options. A real child-process regression failed
 before the fix; the launcher now preserves the exit code and avoids echo-based
 argument detection/delayed expansion. The release scanner was additionally
 regression-tested against JSON-escaped Windows home paths.
+
+Remote PR CI subsequently passed five portable test/publication jobs across
+Windows, Ubuntu and macOS, including Python 3.8 and 3.14. The exact tested
+implementation commit and run link are in `VALIDATION.json`; Logisim runtime
+coverage remains Windows/HUST only. This follow-up updates evidence, not code.

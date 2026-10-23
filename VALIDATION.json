@@ -189,9 +189,39 @@
       "staged_files_checked": 42
     },
     "ci_matrix": {
-      "status": "not_run_at_local_validation",
+      "status": "passed",
       "workflow": ".github/workflows/tests.yml",
-      "scope": "Portable unit checks on Windows/Linux/macOS, Python 3.8/3.14 where available; runtime cases skip without user-provided Logisim"
+      "tested_code_commit": "99c75672b84116d2cf3256b1aa5962732d5691ec",
+      "run_url": "https://github.com/Tebie888/logisim-classic-lab-tools/actions/runs/39966626445",
+      "jobs_passed": 5,
+      "jobs": [
+        {
+          "os": "ubuntu-22.04",
+          "python": "3.8",
+          "status": "passed"
+        },
+        {
+          "os": "ubuntu-latest",
+          "python": "3.14",
+          "status": "passed"
+        },
+        {
+          "os": "windows-latest",
+          "python": "3.8",
+          "status": "passed"
+        },
+        {
+          "os": "windows-latest",
+          "python": "3.14",
+          "status": "passed"
+        },
+        {
+          "os": "macos-latest",
+          "python": "3.14",
+          "status": "passed"
+        }
+      ],
+      "scope": "Portable standard-library tests and publication checks. Runtime-dependent cases skip without user-provided Logisim; this does not verify Linux/macOS Logisim execution."
     },
     "process_cleanup": {
       "status": "passed",
